@@ -22,7 +22,7 @@ const ListaAlumnos = ({ mostrarDetalles, alumnos })=> {
             style={{flex:1}}
             data={alumnos}
             renderItem={({ item, index }) => <ItemAlumno item={item} index={index} mostrarDetalles={mostrarDetalles}/>}
-            keyExtractor={item => item.rut+'-'+Math.round(new Date().getTime()/1000)}
+            keyExtractor={item => item.rut+'-'+Math.random().toString(36).substr(2, 18)}
           />
         </View>
         <View>

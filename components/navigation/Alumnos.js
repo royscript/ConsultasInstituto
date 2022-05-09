@@ -77,7 +77,7 @@ function Alumnos({ navigation, route }) {
           var arrayOut = [];
           arrayIn.forEach(item=> {
             try {
-              if (JSON.stringify(arrayOut[arrayOut.length-1].rut) !== JSON.stringify(item.rut)) {
+              if (JSON.stringify(arrayOut[arrayOut.length-1]) !== JSON.stringify(item)) {
                 arrayOut.push(item);
               }
             } catch(err) {
