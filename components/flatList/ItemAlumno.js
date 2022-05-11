@@ -19,6 +19,9 @@ const styles = (esPie) => {
 };
 function ItemAlumno({ item,index, mostrarDetalles }) {
   return (
+    <TouchableOpacity onPress={()=>{
+              mostrarDetalles({ datos : item });
+          }}>
     <View style={styles(item.esPie).listItem}>
       <Text style={{backgroundColor:'#4285f4', color:'#fff', textAlign:'center',borderRadius:30, width:20, height:20, top:50}}>{index+1}</Text>
       <Image source={{uri:`https:\/\/drive.google.com\/uc?id=${item.foto}`}}  style={{width:60, height:60,borderRadius:30}} />
@@ -32,12 +35,10 @@ function ItemAlumno({ item,index, mostrarDetalles }) {
         {item.esPie=='SI'?<Text style={{fontWeight:"bold", color:"black", backgroundColor:'yellow'}}>PIE - {item.tipoPie}</Text>:null}
         {item.esAlumnoEspecial==true?<Text style={{fontWeight:"bold", color:"white", backgroundColor:'green'}}>SEMI PRESENCIAL</Text>:null}
       </View>
-      <TouchableOpacity style={{height:50,width:50, justifyContent:"center",alignItems:"center"}} onPress={()=>{
-          mostrarDetalles({ datos : item });
-      }}>
-        <Text style={{color:"green"}}>Ver</Text>
-      </TouchableOpacity>
+      
+      
     </View>
+    </TouchableOpacity>
   );
 }
 export default ItemAlumno;
