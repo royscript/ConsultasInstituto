@@ -31,9 +31,9 @@ function ItemAlumno({ item,index, mostrarDetalles }) {
           <Text style={{fontWeight:"bold", color:"black"}}>{item.curso}</Text>
           <Text style={{backgroundColor:'#562990', color:'#fff', textAlign:'center',borderRadius:30, height:20}}> N° Matricula {item.numero} </Text>
           
-          {item.fechaRetiro==undefined? null : <Text style={{fontWeight:"bold", color:"black"}}> Fecha retiro : <Text style={{fontWeight:"bold", color:"red"}}>{item.fechaRetiro}</Text></Text>} 
-          {item.esPie=='SI'?<Text style={{fontWeight:"bold", color:"black", backgroundColor:'yellow'}}>PIE - {item.tipoPie}</Text>:null}
-          {item.esAlumnoEspecial==true?<Text style={{fontWeight:"bold", color:"white", backgroundColor:'green'}}>SEMI PRESENCIAL</Text>:null}
+          {(item.fechaRetiro===undefined) || (item.fechaRetiro==="")? null : <Text style={{fontWeight:"bold", color:"black"}}> Fecha retiro : <Text style={{fontWeight:"bold", color:"red"}}>{item.fechaRetiro}</Text></Text>} 
+          {item.esPie==='SI'?<Text style={{fontWeight:"bold", color:"black", backgroundColor:'yellow'}}>PIE - {item.tipoPie}</Text>:null}
+          {item.esAlumnoEspecial===true?<Text style={{fontWeight:"bold", color:"white", backgroundColor:'green'}}>SEMI PRESENCIAL</Text>:null}
         </View>
       </View>
     </TouchableOpacity>

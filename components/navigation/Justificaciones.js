@@ -6,7 +6,7 @@ import { Col, Row, Grid } from 'react-native-easy-grid';
 const Justificaciones=({ justificaciones })=>{
     return (
         <>
-            <View style={styles.container}>
+        <View style={styles.container}>
                 <Grid>
                     <Col size={35}>
                         <Row style={styles.cell}>
@@ -65,16 +65,26 @@ const Justificaciones=({ justificaciones })=>{
         
     )
 }
+
 export default Justificaciones;
 
 const styles = StyleSheet.create({
     container: {
       width: '100%',
-      height: 300,
+      height: 500,
       padding: 16,
       paddingTop: 0,
       backgroundColor: '#fff',
     },
+    header: {
+        width: '100%',
+        height: 15,
+        borderWidth: 1,
+        borderColor: '#ddd',
+        flex: 1, 
+        justifyContent: 'center',
+        alignItems: 'center'
+      },
     cell: {
       borderWidth: 1,
       borderColor: '#ddd',

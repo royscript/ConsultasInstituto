@@ -19,7 +19,21 @@ function Alumnos({ navigation, route }) {
         return str;
       }
       
-    } 
+    }
+    const sortJSON = (data, key, orden) => {
+      return data.sort(function (a, b) {
+          var x = a[key],
+          y = b[key];
+  
+          if (orden === 'asc') {
+              return ((x < y) ? -1 : ((x > y) ? 1 : 0));
+          }
+  
+          if (orden === 'desc') {
+              return ((x > y) ? -1 : ((x < y) ? 1 : 0));
+          }
+      });
+    }
     const filtrar = (buscar)=>{
       setBuscar(buscar);
       buscar = removerAcentos(String(buscar)).toUpperCase();
@@ -86,7 +100,9 @@ function Alumnos({ navigation, route }) {
           })
           return arrayOut;
       }
-        setDatosFiltrados(removerDuplicados(datos));
+      datos = removerDuplicados(datos);
+      datos = sortJSON(datos,'numero','asc');
+      setDatosFiltrados(datos);
     }
     useEffect(()=>{
       const ordenarRegistrosFotos= (result)=>{
@@ -155,7 +171,7 @@ function Alumnos({ navigation, route }) {
                         resultados.push({
                           jornada : datos[0], 
                           curso: datos[1], 
-                          numero: datos[2],
+                          numero: parseInt(datos[2]),
                           fechaMatricula: datos[5], 
                           apPaterno: datos[7], 
                           apMaterno: datos[8], nombres: datos[9],
@@ -186,7 +202,9 @@ function Alumnos({ navigation, route }) {
                           foto : obtenerFotoAlumno(datos[12]),
                           fechaRetiro : datos[41],
                           esAlumnoEspecial : (esAlumnoEspecial(datos[12])==false?false:true),
-                          acuerdoAlumnoEspecial : esAlumnoEspecial(datos[12])
+                          acuerdoAlumnoEspecial : esAlumnoEspecial(datos[12]),
+                          conQuienVive : datos[42],
+                          fechaIngreso : datos[43]
                         });
                       }
                       
@@ -197,7 +215,7 @@ function Alumnos({ navigation, route }) {
               setLoading(false);
             }
             setMensajeLoading('Cargando alumnos...');
-            dataApi(ordenarRegistrosAlumnos,'alumnos!A1:AP271');
+            dataApi(ordenarRegistrosAlumnos,'alumnos!A1:AR300');
         
     }, [alumnosEspeciales]);
 

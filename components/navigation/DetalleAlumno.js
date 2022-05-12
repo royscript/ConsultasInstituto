@@ -84,6 +84,9 @@ function DetalleAlumno({ navigation, route }) {
                     <Text style={alumno.nacionalidad=='CHILENO' || alumno.nacionalidad=='CHILENA' ? null : {fontWeight:"bold"}}>{alumno.nacionalidad}</Text>
                     <Text style={{fontStyle: 'italic'}}>{alumno.estadoCivil.toLowerCase()}</Text>
                     <Text style={{fontStyle: 'italic'}}>{alumno.fechaNacimiento}, {edad} años</Text>
+                    <Text style={{fontWeight:"bold", color:"black"}}>Fecha Matricula : <Text style={{fontWeight:"normal", color:"black"}}>{alumno.fechaMatricula}</Text></Text>
+                    <Text style={{fontWeight:"bold", color:"black"}}>Fecha Ingreso : <Text style={{fontWeight:"normal", color:"black"}}>{alumno.fechaIngreso}</Text></Text>
+                    <Text style={{fontWeight:"bold", color:"black"}}>Vive con : <Text style={{fontWeight:"normal", color:"black"}}>{alumno.conQuienVive.toLowerCase()}</Text></Text>
                     {alumno.fechaRetiro==undefined? null : <Text style={{fontWeight:"bold", color:"black"}}> Fecha retiro : <Text style={{fontWeight:"bold", color:"red"}}>{alumno.fechaRetiro}</Text></Text>} 
                     {alumno.esPie=='SI'?<Text style={{fontWeight:"bold", color:"black", backgroundColor:'yellow'}}>PIE - {alumno.tipoPie}</Text>:null}
                     {alumno.esAlumnoEspecial==true?<Text style={{fontWeight:"bold", color:"white", backgroundColor:'green'}}>SEMI PRESENCIAL - {alumno.acuerdoAlumnoEspecial}</Text>:null}
