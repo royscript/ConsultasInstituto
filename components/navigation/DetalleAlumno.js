@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Text, Image, View, StyleSheet,ScrollView,SafeAreaView,Dimensions  } from 'react-native';
+import { Text, Image, View, StyleSheet,ScrollView,SafeAreaView,Dimensions, Linking  } from 'react-native';
 import Telefonos from './Telefonos';
 import dataApi from '../apiGoogle/DataAPIJustificativos'; 
 import Justificaciones from './Justificaciones';
@@ -43,20 +43,26 @@ function DetalleAlumno({ navigation, route }) {
     useEffect(()=>{
             const ordenarRegistrosJustificaciones= (result)=>{
                 var resultados = [];
-                result.values.forEach((datos,index) => {
-                    if(alumno.rut==datos[1]){
-                        resultados.push({
-                            id : datos[0], 
-                            rut: datos[1], 
-                            justificacion: datos[2],
-                            documento: datos[3], 
-                            fechaInicio: datos[4], 
-                            fechaFinal: datos[5],
-                        });
-                    }
-                });
-                setJustificaciones(resultados);
-                setLoading(false);
+                if(typeof result.values === 'undefined'){
+                    setJustificaciones([]);
+                    setLoading(false);
+                }else{
+                    result.values.forEach((datos,index) => {
+                        if(alumno.rut==datos[1]){
+                            resultados.push({
+                                id : datos[0], 
+                                rut: datos[1], 
+                                justificacion: datos[2],
+                                documento: datos[3], 
+                                fechaInicio: datos[4], 
+                                fechaFinal: datos[5],
+                            });
+                        }
+                    });
+                    setJustificaciones(resultados);
+                    setLoading(false);
+                }
+                
             }
         dataApi(ordenarRegistrosJustificaciones,'justificaciones!A1:H');
     },[])
@@ -64,7 +70,7 @@ function DetalleAlumno({ navigation, route }) {
     const dia = fechaNacimiento.split("/")[0];
     const mes = fechaNacimiento.split("/")[1];
     const ano = fechaNacimiento.split("/")[2];
-    fechaNacimiento = new Date(ano+"/"+mes+"/"+dia);
+    fechaNacimiento = new Date(ano,mes,dia);
     const fechaActual = new Date();
     var edad = calcularEdad(fechaNacimiento);
     return (
@@ -92,7 +98,7 @@ function DetalleAlumno({ navigation, route }) {
                     {alumno.esAlumnoEspecial==true?<Text style={{fontWeight:"bold", color:"white", backgroundColor:'green'}}>SEMI PRESENCIAL - {alumno.acuerdoAlumnoEspecial}</Text>:null}
                     <Text></Text>
                     <Text style={{fontWeight:"bold"}}>Telefono</Text>
-                    <Telefonos telefonos={alumno.telefonos}/>
+                    <Telefonos telefonos={alumno.telefonos} nombreCompleto={`${alumno.nombres} ${alumno.apPaterno} ${alumno.apMaterno}`}/>
                     <Text></Text>
                     <Text style={{fontWeight:"bold"}}>Apoderado</Text>
                     <Text>{alumno.apoderado}</Text>
@@ -113,7 +119,16 @@ function DetalleAlumno({ navigation, route }) {
                     }}></Button>
                     <Text></Text>
                     <Text style={{fontWeight:"bold"}}>E-mail</Text>
-                    <Text>{alumno.email}</Text>
+                    <Text onPress={()=>{
+                        if(alumno.email.length>0){
+                            try {
+                                return Linking.openURL('mail:'+alumno.email);
+                            } catch (error) {
+                                return false;
+                            }
+                            
+                        }
+                        }}>{alumno.email}</Text>
                     <Text style={{fontWeight:"bold",color:"red"}}>{alumno.contarsenaCorreo}</Text>
                     <Text></Text>
                     <Text style={{fontWeight:"bold"}}>Antecedentes Morbidos</Text>

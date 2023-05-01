@@ -2,23 +2,68 @@
 import React from 'react';
 import { View, StyleSheet, Text, Alert, Linking } from 'react-native';
 import { Col, Row, Grid } from 'react-native-easy-grid';
-
-const llamar = (tel)=>{
+const alertaError = (text)=>{
+    Alert.alert('Error', text, [
+        {
+          text: 'Cancel',
+          onPress: () => console.log('Cancel Pressed'),
+          style: 'cancel',
+        },
+        {text: 'OK', onPress: () => console.log('OK Pressed')},
+      ]);
+}
+const llamar = (tel, nombreCompleto)=>{
     Alert.alert ('Telefono : '+tel, '¿Que desea hacer?',
         [
             {text: 'Cancelar', onPress: () => {/*console.log ('Cancelar')*/}},
             {text: 'Llamar', onPress: () => {
-                                        Linking.canOpenURL('tel: '+tel).then((supported) => {
-                                        if (!supported) {
-                                            console.log('Can not handle tel:' + tel)
-                                        } else {
-                                            return Linking.openURL('tel: '+tel)
+                                        if(tel.length===11){//Celular 56967052104
+                                            tel = `+${tel}`;
+                                        }else if(tel.length===9){//celular sin codigo 967052104
+                                            tel = `+56${tel}`;
                                         }
-                                        }).catch(error => console.log('tel error', error))
+                                        try {
+                                            return Linking.openURL('tel:/'+tel+'/');
+                                        } catch (error) {
+                                            return alertaError('Error :' + error);
+                                        }
+                                        
+                                        /*Linking.canOpenURL('tel:/'+tel+'/').then((supported) => {
+                                        if (!supported) {
+                                            alertaError('Can not handle tel:' + tel)
+                                        } else {
+                                            return Linking.openURL('tel:/'+tel+'/')
+                                        }
+                                        }).catch(error => alertaError(error))*/
                              } 
-            }])
+            },
+            {text: 'Whatsapp', onPress: () => {
+                            if(tel.length===11){//Celular 56967052104
+                                tel = `+${tel}`.replaceAll(' ','');
+                            }else if(tel.length===9){//celular sin codigo 967052104
+                                tel = `+56${tel}`.replaceAll(' ','');
+                            }else{
+                                
+                            }
+                            try {
+                                return Linking.openURL(`whatsapp://send?text=${encodeURIComponent(`Estimad@ ${nombreCompleto}`)}&phone=${tel}`);
+                            } catch (error) {
+                                return alertaError('Error :' + error);
+                            }
+                            
+                            /*Linking.canOpenURL(`whatsapp://send?text=${encodeURIComponent(`Estimad@ ${nombreCompleto}`)}&phone=${tel}`).then((supported) => {
+                            if (!supported) {
+                                alertaError('Can not handle tel:' + tel)
+                                alertaError(`whatsapp://send?text=${encodeURIComponent(`Estimad@ ${nombreCompleto}`)}&phone=${tel}`)
+                            } else {
+                                return Linking.openURL(`whatsapp://send?text=${encodeURIComponent(`Estimad@ ${nombreCompleto}`)}&phone=${tel}`)
+                            }
+                            }).catch(error => alertaError(error))*/
+                } 
+            }
+        ])
 }
-const Telefonos=({ telefonos })=>{
+const Telefonos=({ telefonos, nombreCompleto })=>{
     var vectorTelefonos = telefonos.split(' ');
     var listadoContactos = [];
     var telefonoMomentaneo = '';
@@ -74,7 +119,7 @@ const Telefonos=({ telefonos })=>{
                         listadoContactos.map((item,key)=>{
                             return (
                                 <Row style={styles.cell} key={key}>
-                                    <Text onPress={()=>llamar(item.telefono)}>{item.telefono}</Text>
+                                    <Text onPress={()=>llamar(item.telefono, nombreCompleto)}>{item.telefono}</Text>
                                 </Row>
                             );
                         })

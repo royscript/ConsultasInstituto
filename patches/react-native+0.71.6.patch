@@ -1,0 +1,979 @@
+diff --git a/node_modules/react-native/Libraries/Core/ReactNativeVersion.js b/node_modules/react-native/Libraries/Core/ReactNativeVersion.js
+index d581093..7be4c6f 100644
+--- a/node_modules/react-native/Libraries/Core/ReactNativeVersion.js
++++ b/node_modules/react-native/Libraries/Core/ReactNativeVersion.js
+@@ -12,6 +12,6 @@
+ exports.version = {
+   major: 0,
+   minor: 71,
+-  patch: 7,
++  patch: 6,
+   prerelease: null,
+ };
+diff --git a/node_modules/react-native/React/Base/RCTVersion.m b/node_modules/react-native/React/Base/RCTVersion.m
+index 429d63e..a81c04e 100644
+--- a/node_modules/react-native/React/Base/RCTVersion.m
++++ b/node_modules/react-native/React/Base/RCTVersion.m
+@@ -23,7 +23,7 @@ NSDictionary* RCTGetReactNativeVersion(void)
+     __rnVersion = @{
+                   RCTVersionMajor: @(0),
+                   RCTVersionMinor: @(71),
+-                  RCTVersionPatch: @(7),
++                  RCTVersionPatch: @(6),
+                   RCTVersionPrerelease: [NSNull null],
+                   };
+   });
+diff --git a/node_modules/react-native/ReactAndroid/gradle.properties b/node_modules/react-native/ReactAndroid/gradle.properties
+index 262c854..2eb08ca 100644
+--- a/node_modules/react-native/ReactAndroid/gradle.properties
++++ b/node_modules/react-native/ReactAndroid/gradle.properties
+@@ -1,4 +1,4 @@
+-VERSION_NAME=0.71.7
++VERSION_NAME=0.71.6
+ GROUP=com.facebook.react
+ 
+ # JVM Versions
+diff --git a/node_modules/react-native/ReactAndroid/src/main/java/com/facebook/react/modules/systeminfo/ReactNativeVersion.java b/node_modules/react-native/ReactAndroid/src/main/java/com/facebook/react/modules/systeminfo/ReactNativeVersion.java
+index 62b07fa..985066d 100644
+--- a/node_modules/react-native/ReactAndroid/src/main/java/com/facebook/react/modules/systeminfo/ReactNativeVersion.java
++++ b/node_modules/react-native/ReactAndroid/src/main/java/com/facebook/react/modules/systeminfo/ReactNativeVersion.java
+@@ -17,6 +17,6 @@ public class ReactNativeVersion {
+   public static final Map<String, Object> VERSION = MapBuilder.<String, Object>of(
+       "major", 0,
+       "minor", 71,
+-      "patch", 7,
++      "patch", 6,
+       "prerelease", null);
+ }
+diff --git a/node_modules/react-native/ReactAndroid/src/main/java/com/facebook/react/views/text/CustomLetterSpacingSpan.java b/node_modules/react-native/ReactAndroid/src/main/java/com/facebook/react/views/text/CustomLetterSpacingSpan.java
+index d537cd5..3b9cf58 100644
+--- a/node_modules/react-native/ReactAndroid/src/main/java/com/facebook/react/views/text/CustomLetterSpacingSpan.java
++++ b/node_modules/react-native/ReactAndroid/src/main/java/com/facebook/react/views/text/CustomLetterSpacingSpan.java
+@@ -37,10 +37,6 @@ public class CustomLetterSpacingSpan extends MetricAffectingSpan implements Reac
+     apply(paint);
+   }
+ 
+-  public float getSpacing() {
+-    return mLetterSpacing;
+-  }
+-
+   private void apply(TextPaint paint) {
+     if (!Float.isNaN(mLetterSpacing)) {
+       paint.setLetterSpacing(mLetterSpacing);
+diff --git a/node_modules/react-native/ReactAndroid/src/main/java/com/facebook/react/views/text/CustomStyleSpan.java b/node_modules/react-native/ReactAndroid/src/main/java/com/facebook/react/views/text/CustomStyleSpan.java
+index 7866390..b249126 100644
+--- a/node_modules/react-native/ReactAndroid/src/main/java/com/facebook/react/views/text/CustomStyleSpan.java
++++ b/node_modules/react-native/ReactAndroid/src/main/java/com/facebook/react/views/text/CustomStyleSpan.java
+@@ -71,10 +71,6 @@ public class CustomStyleSpan extends MetricAffectingSpan implements ReactSpan {
+     return mFontFamily;
+   }
+ 
+-  public @Nullable String getFontFeatureSettings() {
+-    return mFeatureSettings;
+-  }
+-
+   private static void apply(
+       Paint paint,
+       int style,
+diff --git a/node_modules/react-native/ReactAndroid/src/main/java/com/facebook/react/views/text/ReactTextUpdate.java b/node_modules/react-native/ReactAndroid/src/main/java/com/facebook/react/views/text/ReactTextUpdate.java
+index 82c9f5d..f1591a5 100644
+--- a/node_modules/react-native/ReactAndroid/src/main/java/com/facebook/react/views/text/ReactTextUpdate.java
++++ b/node_modules/react-native/ReactAndroid/src/main/java/com/facebook/react/views/text/ReactTextUpdate.java
+@@ -31,6 +31,8 @@ public class ReactTextUpdate {
+   private final int mSelectionEnd;
+   private final int mJustificationMode;
+ 
++  public boolean mContainsMultipleFragments;
++
+   /**
+    * @deprecated Use a non-deprecated constructor for ReactTextUpdate instead. This one remains
+    *     because it's being used by a unit test that isn't currently open source.
+@@ -140,11 +142,13 @@ public class ReactTextUpdate {
+       int jsEventCounter,
+       int textAlign,
+       int textBreakStrategy,
+-      int justificationMode) {
++      int justificationMode,
++      boolean containsMultipleFragments) {
+ 
+     ReactTextUpdate reactTextUpdate =
+         new ReactTextUpdate(
+             text, jsEventCounter, false, textAlign, textBreakStrategy, justificationMode);
++    reactTextUpdate.mContainsMultipleFragments = containsMultipleFragments;
+     return reactTextUpdate;
+   }
+ 
+diff --git a/node_modules/react-native/ReactAndroid/src/main/java/com/facebook/react/views/text/ReactTextView.java b/node_modules/react-native/ReactAndroid/src/main/java/com/facebook/react/views/text/ReactTextView.java
+index 6e74279..e5e4056 100644
+--- a/node_modules/react-native/ReactAndroid/src/main/java/com/facebook/react/views/text/ReactTextView.java
++++ b/node_modules/react-native/ReactAndroid/src/main/java/com/facebook/react/views/text/ReactTextView.java
+@@ -54,6 +54,7 @@ public class ReactTextView extends AppCompatTextView implements ReactCompoundVie
+   private boolean mContainsImages;
+   private final int mDefaultGravityHorizontal;
+   private final int mDefaultGravityVertical;
++  private int mTextAlign;
+   private int mNumberOfLines;
+   private TextUtils.TruncateAt mEllipsizeLocation;
+   private boolean mAdjustsFontSizeToFit;
+@@ -68,7 +69,8 @@ public class ReactTextView extends AppCompatTextView implements ReactCompoundVie
+     super(context);
+ 
+     // Get these defaults only during the constructor - these should never be set otherwise
+-    mDefaultGravityHorizontal = getGravityHorizontal();
++    mDefaultGravityHorizontal =
++        getGravity() & (Gravity.HORIZONTAL_GRAVITY_MASK | Gravity.RELATIVE_HORIZONTAL_GRAVITY_MASK);
+     mDefaultGravityVertical = getGravity() & Gravity.VERTICAL_GRAVITY_MASK;
+ 
+     initView();
+@@ -87,10 +89,10 @@ public class ReactTextView extends AppCompatTextView implements ReactCompoundVie
+ 
+     mReactBackgroundManager = new ReactViewBackgroundManager(this);
+ 
++    mTextAlign = Gravity.NO_GRAVITY;
+     mNumberOfLines = ViewDefaults.NUMBER_OF_LINES;
+     mAdjustsFontSizeToFit = false;
+     mLinkifyMaskType = 0;
+-    mNotifyOnInlineViewLayout = false;
+     mTextIsSelectable = false;
+     mEllipsizeLocation = TextUtils.TruncateAt.END;
+ 
+@@ -390,9 +392,10 @@ public class ReactTextView extends AppCompatTextView implements ReactCompoundVie
+     }
+ 
+     int nextTextAlign = update.getTextAlign();
+-    if (nextTextAlign != getGravityHorizontal()) {
+-      setGravityHorizontal(nextTextAlign);
++    if (mTextAlign != nextTextAlign) {
++      mTextAlign = nextTextAlign;
+     }
++    setGravityHorizontal(mTextAlign);
+     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+       if (getBreakStrategy() != update.getTextBreakStrategy()) {
+         setBreakStrategy(update.getTextBreakStrategy());
+@@ -549,11 +552,6 @@ public class ReactTextView extends AppCompatTextView implements ReactCompoundVie
+     return false;
+   }
+ 
+-  /* package */ int getGravityHorizontal() {
+-    return getGravity()
+-        & (Gravity.HORIZONTAL_GRAVITY_MASK | Gravity.RELATIVE_HORIZONTAL_GRAVITY_MASK);
+-  }
+-
+   /* package */ void setGravityHorizontal(int gravityHorizontal) {
+     if (gravityHorizontal == 0) {
+       gravityHorizontal = mDefaultGravityHorizontal;
+diff --git a/node_modules/react-native/ReactAndroid/src/main/java/com/facebook/react/views/text/ReactTextViewManager.java b/node_modules/react-native/ReactAndroid/src/main/java/com/facebook/react/views/text/ReactTextViewManager.java
+index 705223f..0c8a7f0 100644
+--- a/node_modules/react-native/ReactAndroid/src/main/java/com/facebook/react/views/text/ReactTextViewManager.java
++++ b/node_modules/react-native/ReactAndroid/src/main/java/com/facebook/react/views/text/ReactTextViewManager.java
+@@ -8,7 +8,6 @@
+ package com.facebook.react.views.text;
+ 
+ import android.content.Context;
+-import android.os.Build;
+ import android.text.Spannable;
+ import androidx.annotation.NonNull;
+ import androidx.annotation.Nullable;
+@@ -24,7 +23,6 @@ import com.facebook.react.uimanager.ReactAccessibilityDelegate;
+ import com.facebook.react.uimanager.ReactStylesDiffMap;
+ import com.facebook.react.uimanager.StateWrapper;
+ import com.facebook.react.uimanager.ThemedReactContext;
+-import com.facebook.react.uimanager.ViewProps;
+ import com.facebook.yoga.YogaMeasureMode;
+ import java.util.HashMap;
+ import java.util.Map;
+@@ -150,19 +148,15 @@ public class ReactTextViewManager
+     view.setSpanned(spanned);
+ 
+     int textBreakStrategy =
+-        TextAttributeProps.getTextBreakStrategy(
+-            paragraphAttributes.getString(ViewProps.TEXT_BREAK_STRATEGY));
+-    int currentJustificationMode =
+-        Build.VERSION.SDK_INT < Build.VERSION_CODES.O ? 0 : view.getJustificationMode();
++        TextAttributeProps.getTextBreakStrategy(paragraphAttributes.getString("textBreakStrategy"));
+ 
+     return new ReactTextUpdate(
+         spanned,
+         state.hasKey("mostRecentEventCount") ? state.getInt("mostRecentEventCount") : -1,
+         false, // TODO add this into local Data
+-        TextAttributeProps.getTextAlignment(
+-            props, TextLayoutManager.isRTL(attributedString), view.getGravityHorizontal()),
++        TextAttributeProps.getTextAlignment(props, TextLayoutManager.isRTL(attributedString)),
+         textBreakStrategy,
+-        TextAttributeProps.getJustificationMode(props, currentJustificationMode));
++        TextAttributeProps.getJustificationMode(props));
+   }
+ 
+   private Object getReactTextUpdate(ReactTextView view, ReactStylesDiffMap props, MapBuffer state) {
+@@ -177,17 +171,15 @@ public class ReactTextViewManager
+     int textBreakStrategy =
+         TextAttributeProps.getTextBreakStrategy(
+             paragraphAttributes.getString(TextLayoutManagerMapBuffer.PA_KEY_TEXT_BREAK_STRATEGY));
+-    int currentJustificationMode =
+-        Build.VERSION.SDK_INT < Build.VERSION_CODES.O ? 0 : view.getJustificationMode();
+ 
+     return new ReactTextUpdate(
+         spanned,
+         -1, // UNUSED FOR TEXT
+         false, // TODO add this into local Data
+         TextAttributeProps.getTextAlignment(
+-            props, TextLayoutManagerMapBuffer.isRTL(attributedString), view.getGravityHorizontal()),
++            props, TextLayoutManagerMapBuffer.isRTL(attributedString)),
+         textBreakStrategy,
+-        TextAttributeProps.getJustificationMode(props, currentJustificationMode));
++        TextAttributeProps.getJustificationMode(props));
+   }
+ 
+   @Override
+diff --git a/node_modules/react-native/ReactAndroid/src/main/java/com/facebook/react/views/text/TextAttributeProps.java b/node_modules/react-native/ReactAndroid/src/main/java/com/facebook/react/views/text/TextAttributeProps.java
+index 0a14e28..787ab9b 100644
+--- a/node_modules/react-native/ReactAndroid/src/main/java/com/facebook/react/views/text/TextAttributeProps.java
++++ b/node_modules/react-native/ReactAndroid/src/main/java/com/facebook/react/views/text/TextAttributeProps.java
+@@ -249,35 +249,35 @@ public class TextAttributeProps {
+     return result;
+   }
+ 
+-  public static int getTextAlignment(ReactStylesDiffMap props, boolean isRTL, int defaultValue) {
+-    if (!props.hasKey(ViewProps.TEXT_ALIGN)) {
+-      return defaultValue;
+-    }
++  public static int getTextAlignment(ReactStylesDiffMap props, boolean isRTL) {
++    @Nullable
++    String textAlignPropValue =
++        props.hasKey(ViewProps.TEXT_ALIGN) ? props.getString(ViewProps.TEXT_ALIGN) : null;
++    int textAlignment;
+ 
+-    String textAlignPropValue = props.getString(ViewProps.TEXT_ALIGN);
+     if ("justify".equals(textAlignPropValue)) {
+-      return Gravity.LEFT;
++      textAlignment = Gravity.LEFT;
+     } else {
+       if (textAlignPropValue == null || "auto".equals(textAlignPropValue)) {
+-        return Gravity.NO_GRAVITY;
++        textAlignment = Gravity.NO_GRAVITY;
+       } else if ("left".equals(textAlignPropValue)) {
+-        return isRTL ? Gravity.RIGHT : Gravity.LEFT;
++        textAlignment = isRTL ? Gravity.RIGHT : Gravity.LEFT;
+       } else if ("right".equals(textAlignPropValue)) {
+-        return isRTL ? Gravity.LEFT : Gravity.RIGHT;
++        textAlignment = isRTL ? Gravity.LEFT : Gravity.RIGHT;
+       } else if ("center".equals(textAlignPropValue)) {
+-        return Gravity.CENTER_HORIZONTAL;
++        textAlignment = Gravity.CENTER_HORIZONTAL;
+       } else {
+         throw new JSApplicationIllegalArgumentException("Invalid textAlign: " + textAlignPropValue);
+       }
+     }
++    return textAlignment;
+   }
+ 
+-  public static int getJustificationMode(ReactStylesDiffMap props, int defaultValue) {
+-    if (!props.hasKey(ViewProps.TEXT_ALIGN)) {
+-      return defaultValue;
+-    }
++  public static int getJustificationMode(ReactStylesDiffMap props) {
++    @Nullable
++    String textAlignPropValue =
++        props.hasKey(ViewProps.TEXT_ALIGN) ? props.getString(ViewProps.TEXT_ALIGN) : null;
+ 
+-    String textAlignPropValue = props.getString(ViewProps.TEXT_ALIGN);
+     if ("justify".equals(textAlignPropValue) && Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+       return Layout.JUSTIFICATION_MODE_INTER_WORD;
+     }
+diff --git a/node_modules/react-native/ReactAndroid/src/main/java/com/facebook/react/views/textinput/ReactEditText.java b/node_modules/react-native/ReactAndroid/src/main/java/com/facebook/react/views/textinput/ReactEditText.java
+index 290bd23..c150abc 100644
+--- a/node_modules/react-native/ReactAndroid/src/main/java/com/facebook/react/views/textinput/ReactEditText.java
++++ b/node_modules/react-native/ReactAndroid/src/main/java/com/facebook/react/views/textinput/ReactEditText.java
+@@ -11,8 +11,6 @@ import static com.facebook.react.uimanager.UIManagerHelper.getReactContext;
+ import static com.facebook.react.views.text.TextAttributeProps.UNSET;
+ 
+ import android.content.Context;
+-import android.graphics.Color;
+-import android.graphics.Paint;
+ import android.graphics.Rect;
+ import android.graphics.Typeface;
+ import android.graphics.drawable.Drawable;
+@@ -52,19 +50,15 @@ import com.facebook.react.views.text.CustomLetterSpacingSpan;
+ import com.facebook.react.views.text.CustomLineHeightSpan;
+ import com.facebook.react.views.text.CustomStyleSpan;
+ import com.facebook.react.views.text.ReactAbsoluteSizeSpan;
+-import com.facebook.react.views.text.ReactBackgroundColorSpan;
+-import com.facebook.react.views.text.ReactForegroundColorSpan;
+ import com.facebook.react.views.text.ReactSpan;
+-import com.facebook.react.views.text.ReactStrikethroughSpan;
+ import com.facebook.react.views.text.ReactTextUpdate;
+ import com.facebook.react.views.text.ReactTypefaceUtils;
+-import com.facebook.react.views.text.ReactUnderlineSpan;
+ import com.facebook.react.views.text.TextAttributes;
+ import com.facebook.react.views.text.TextInlineImageSpan;
+ import com.facebook.react.views.text.TextLayoutManager;
+ import com.facebook.react.views.view.ReactViewBackgroundManager;
+ import java.util.ArrayList;
+-import java.util.Objects;
++import java.util.List;
+ 
+ /**
+  * A wrapper around the EditText that lets us better control what happens when an EditText gets
+@@ -88,6 +82,7 @@ public class ReactEditText extends AppCompatEditText
+   // *TextChanged events should be triggered. This is less expensive than removing the text
+   // listeners and adding them back again after the text change is completed.
+   protected boolean mIsSettingTextFromJS;
++  protected boolean mIsSettingTextFromCacheUpdate = false;
+   private int mDefaultGravityHorizontal;
+   private int mDefaultGravityVertical;
+ 
+@@ -367,7 +362,7 @@ public class ReactEditText extends AppCompatEditText
+     }
+ 
+     super.onSelectionChanged(selStart, selEnd);
+-    if (mSelectionWatcher != null && hasFocus()) {
++    if (!mIsSettingTextFromCacheUpdate && mSelectionWatcher != null && hasFocus()) {
+       mSelectionWatcher.onSelectionChanged(selStart, selEnd);
+     }
+   }
+@@ -517,14 +512,6 @@ public class ReactEditText extends AppCompatEditText
+     }
+   }
+ 
+-  @Override
+-  public void setFontFeatureSettings(String fontFeatureSettings) {
+-    if (!Objects.equals(fontFeatureSettings, getFontFeatureSettings())) {
+-      super.setFontFeatureSettings(fontFeatureSettings);
+-      mTypefaceDirty = true;
+-    }
+-  }
+-
+   public void maybeUpdateTypeface() {
+     if (!mTypefaceDirty) {
+       return;
+@@ -536,17 +523,6 @@ public class ReactEditText extends AppCompatEditText
+         ReactTypefaceUtils.applyStyles(
+             getTypeface(), mFontStyle, mFontWeight, mFontFamily, getContext().getAssets());
+     setTypeface(newTypeface);
+-
+-    // Match behavior of CustomStyleSpan and enable SUBPIXEL_TEXT_FLAG when setting anything
+-    // nonstandard
+-    if (mFontStyle != UNSET
+-        || mFontWeight != UNSET
+-        || mFontFamily != null
+-        || getFontFeatureSettings() != null) {
+-      setPaintFlags(getPaintFlags() | Paint.SUBPIXEL_TEXT_FLAG);
+-    } else {
+-      setPaintFlags(getPaintFlags() & (~Paint.SUBPIXEL_TEXT_FLAG));
+-    }
+   }
+ 
+   // VisibleForTesting from {@link TextInputEventsTestCase}.
+@@ -608,8 +584,10 @@ public class ReactEditText extends AppCompatEditText
+     SpannableStringBuilder spannableStringBuilder =
+         new SpannableStringBuilder(reactTextUpdate.getText());
+ 
+-    manageSpans(spannableStringBuilder);
+-    stripStyleEquivalentSpans(spannableStringBuilder);
++    manageSpans(spannableStringBuilder, reactTextUpdate.mContainsMultipleFragments);
++
++    // Mitigation for https://github.com/facebook/react-native/issues/35936 (S318090)
++    stripAbsoluteSizeSpans(spannableStringBuilder);
+ 
+     mContainsImages = reactTextUpdate.containsImages();
+ 
+@@ -637,7 +615,7 @@ public class ReactEditText extends AppCompatEditText
+     }
+ 
+     // Update cached spans (in Fabric only).
+-    updateCachedSpannable();
++    updateCachedSpannable(false);
+   }
+ 
+   /**
+@@ -646,7 +624,8 @@ public class ReactEditText extends AppCompatEditText
+    * will adapt to the new text, hence why {@link SpannableStringBuilder#replace} never removes
+    * them.
+    */
+-  private void manageSpans(SpannableStringBuilder spannableStringBuilder) {
++  private void manageSpans(
++      SpannableStringBuilder spannableStringBuilder, boolean skipAddSpansForMeasurements) {
+     Object[] spans = getText().getSpans(0, length(), Object.class);
+     for (int spanIdx = 0; spanIdx < spans.length; spanIdx++) {
+       Object span = spans[spanIdx];
+@@ -674,170 +653,33 @@ public class ReactEditText extends AppCompatEditText
+         spannableStringBuilder.setSpan(span, spanStart, spanEnd, spanFlags);
+       }
+     }
+-  }
+-
+-  // TODO: Replace with Predicate<T> and lambdas once Java 8 builds in OSS
+-  interface SpanPredicate<T> {
+-    boolean test(T span);
+-  }
+-
+-  /**
+-   * Remove spans from the SpannableStringBuilder which can be represented by TextAppearance
+-   * attributes on the underlying EditText. This works around instability on Samsung devices with
+-   * the presence of spans https://github.com/facebook/react-native/issues/35936 (S318090)
+-   */
+-  private void stripStyleEquivalentSpans(SpannableStringBuilder sb) {
+-    stripSpansOfKind(
+-        sb,
+-        ReactAbsoluteSizeSpan.class,
+-        new SpanPredicate<ReactAbsoluteSizeSpan>() {
+-          @Override
+-          public boolean test(ReactAbsoluteSizeSpan span) {
+-            return span.getSize() == mTextAttributes.getEffectiveFontSize();
+-          }
+-        });
+-
+-    stripSpansOfKind(
+-        sb,
+-        ReactBackgroundColorSpan.class,
+-        new SpanPredicate<ReactBackgroundColorSpan>() {
+-          @Override
+-          public boolean test(ReactBackgroundColorSpan span) {
+-            return span.getBackgroundColor() == mReactBackgroundManager.getBackgroundColor();
+-          }
+-        });
+ 
+-    stripSpansOfKind(
+-        sb,
+-        ReactForegroundColorSpan.class,
+-        new SpanPredicate<ReactForegroundColorSpan>() {
+-          @Override
+-          public boolean test(ReactForegroundColorSpan span) {
+-            return span.getForegroundColor() == getCurrentTextColor();
+-          }
+-        });
+-
+-    stripSpansOfKind(
+-        sb,
+-        ReactStrikethroughSpan.class,
+-        new SpanPredicate<ReactStrikethroughSpan>() {
+-          @Override
+-          public boolean test(ReactStrikethroughSpan span) {
+-            return (getPaintFlags() & Paint.STRIKE_THRU_TEXT_FLAG) != 0;
+-          }
+-        });
+-
+-    stripSpansOfKind(
+-        sb,
+-        ReactUnderlineSpan.class,
+-        new SpanPredicate<ReactUnderlineSpan>() {
+-          @Override
+-          public boolean test(ReactUnderlineSpan span) {
+-            return (getPaintFlags() & Paint.UNDERLINE_TEXT_FLAG) != 0;
+-          }
+-        });
+-
+-    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+-      stripSpansOfKind(
+-          sb,
+-          CustomLetterSpacingSpan.class,
+-          new SpanPredicate<CustomLetterSpacingSpan>() {
+-            @Override
+-            public boolean test(CustomLetterSpacingSpan span) {
+-              return span.getSpacing() == mTextAttributes.getEffectiveLetterSpacing();
+-            }
+-          });
++    // In Fabric only, apply necessary styles to entire span
++    // If the Spannable was constructed from multiple fragments, we don't apply any spans that could
++    // impact the whole Spannable, because that would override "local" styles per-fragment
++    if (!skipAddSpansForMeasurements) {
++      addSpansForMeasurement(getText());
+     }
+-
+-    stripSpansOfKind(
+-        sb,
+-        CustomStyleSpan.class,
+-        new SpanPredicate<CustomStyleSpan>() {
+-          @Override
+-          public boolean test(CustomStyleSpan span) {
+-            return span.getStyle() == mFontStyle
+-                && Objects.equals(span.getFontFamily(), mFontFamily)
+-                && span.getWeight() == mFontWeight
+-                && Objects.equals(span.getFontFeatureSettings(), getFontFeatureSettings());
+-          }
+-        });
+   }
+ 
+-  private <T> void stripSpansOfKind(
+-      SpannableStringBuilder sb, Class<T> clazz, SpanPredicate<T> shouldStrip) {
+-    T[] spans = sb.getSpans(0, sb.length(), clazz);
+-
+-    for (T span : spans) {
+-      if (shouldStrip.test(span)) {
+-        sb.removeSpan(span);
+-      }
+-    }
+-  }
+-
+-  /**
+-   * Copy styles represented as attributes to the underlying span, for later measurement or other
+-   * usage outside the ReactEditText.
+-   */
+-  private void addSpansFromStyleAttributes(SpannableStringBuilder workingText) {
+-    int spanFlags = Spannable.SPAN_INCLUSIVE_INCLUSIVE;
+-
+-    // Set all bits for SPAN_PRIORITY so that this span has the highest possible priority
+-    // (least precedence). This ensures the span is behind any overlapping spans.
+-    spanFlags |= Spannable.SPAN_PRIORITY;
+-
+-    workingText.setSpan(
+-        new ReactAbsoluteSizeSpan(mTextAttributes.getEffectiveFontSize()),
+-        0,
+-        workingText.length(),
+-        spanFlags);
+-
+-    workingText.setSpan(
+-        new ReactForegroundColorSpan(getCurrentTextColor()), 0, workingText.length(), spanFlags);
+-
+-    int backgroundColor = mReactBackgroundManager.getBackgroundColor();
+-    if (backgroundColor != Color.TRANSPARENT) {
+-      workingText.setSpan(
+-          new ReactBackgroundColorSpan(backgroundColor), 0, workingText.length(), spanFlags);
+-    }
+-
+-    if ((getPaintFlags() & Paint.STRIKE_THRU_TEXT_FLAG) != 0) {
+-      workingText.setSpan(new ReactStrikethroughSpan(), 0, workingText.length(), spanFlags);
+-    }
++  private void stripAbsoluteSizeSpans(SpannableStringBuilder sb) {
++    // We have already set a font size on the EditText itself. We can safely remove sizing spans
++    // which are the same as the set font size, and not otherwise overlapped.
++    final int effectiveFontSize = mTextAttributes.getEffectiveFontSize();
++    ReactAbsoluteSizeSpan[] spans = sb.getSpans(0, sb.length(), ReactAbsoluteSizeSpan.class);
+ 
+-    if ((getPaintFlags() & Paint.UNDERLINE_TEXT_FLAG) != 0) {
+-      workingText.setSpan(new ReactUnderlineSpan(), 0, workingText.length(), spanFlags);
+-    }
++    outerLoop:
++    for (ReactAbsoluteSizeSpan span : spans) {
++      ReactAbsoluteSizeSpan[] overlappingSpans =
++          sb.getSpans(sb.getSpanStart(span), sb.getSpanEnd(span), ReactAbsoluteSizeSpan.class);
+ 
+-    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+-      float effectiveLetterSpacing = mTextAttributes.getEffectiveLetterSpacing();
+-      if (!Float.isNaN(effectiveLetterSpacing)) {
+-        workingText.setSpan(
+-            new CustomLetterSpacingSpan(effectiveLetterSpacing),
+-            0,
+-            workingText.length(),
+-            spanFlags);
++      for (ReactAbsoluteSizeSpan overlappingSpan : overlappingSpans) {
++        if (span.getSize() != effectiveFontSize) {
++          continue outerLoop;
++        }
+       }
+-    }
+ 
+-    if (mFontStyle != UNSET
+-        || mFontWeight != UNSET
+-        || mFontFamily != null
+-        || getFontFeatureSettings() != null) {
+-      workingText.setSpan(
+-          new CustomStyleSpan(
+-              mFontStyle,
+-              mFontWeight,
+-              getFontFeatureSettings(),
+-              mFontFamily,
+-              getContext().getAssets()),
+-          0,
+-          workingText.length(),
+-          spanFlags);
+-    }
+-
+-    float lineHeight = mTextAttributes.getEffectiveLineHeight();
+-    if (!Float.isNaN(lineHeight)) {
+-      workingText.setSpan(new CustomLineHeightSpan(lineHeight), 0, workingText.length(), spanFlags);
++      sb.removeSpan(span);
+     }
+   }
+ 
+@@ -857,6 +699,73 @@ public class ReactEditText extends AppCompatEditText
+     return true;
+   }
+ 
++  // This is hacked in for Fabric. When we delete non-Fabric code, we might be able to simplify or
++  // clean this up a bit.
++  private void addSpansForMeasurement(Spannable spannable) {
++    if (!mFabricViewStateManager.hasStateWrapper()) {
++      return;
++    }
++
++    boolean originalDisableTextDiffing = mDisableTextDiffing;
++    mDisableTextDiffing = true;
++
++    int start = 0;
++    int end = spannable.length();
++
++    // Remove duplicate spans we might add here
++    Object[] spans = spannable.getSpans(0, length(), Object.class);
++    for (Object span : spans) {
++      int spanFlags = spannable.getSpanFlags(span);
++      boolean isInclusive =
++          (spanFlags & Spanned.SPAN_INCLUSIVE_INCLUSIVE) == Spanned.SPAN_INCLUSIVE_INCLUSIVE
++              || (spanFlags & Spanned.SPAN_INCLUSIVE_EXCLUSIVE) == Spanned.SPAN_INCLUSIVE_EXCLUSIVE;
++      if (isInclusive
++          && span instanceof ReactSpan
++          && spannable.getSpanStart(span) == start
++          && spannable.getSpanEnd(span) == end) {
++        spannable.removeSpan(span);
++      }
++    }
++
++    List<TextLayoutManager.SetSpanOperation> ops = new ArrayList<>();
++
++    if (!Float.isNaN(mTextAttributes.getLetterSpacing())) {
++      ops.add(
++          new TextLayoutManager.SetSpanOperation(
++              start, end, new CustomLetterSpacingSpan(mTextAttributes.getLetterSpacing())));
++    }
++    ops.add(
++        new TextLayoutManager.SetSpanOperation(
++            start, end, new ReactAbsoluteSizeSpan((int) mTextAttributes.getEffectiveFontSize())));
++    if (mFontStyle != UNSET || mFontWeight != UNSET || mFontFamily != null) {
++      ops.add(
++          new TextLayoutManager.SetSpanOperation(
++              start,
++              end,
++              new CustomStyleSpan(
++                  mFontStyle,
++                  mFontWeight,
++                  null, // TODO: do we need to support FontFeatureSettings / fontVariant?
++                  mFontFamily,
++                  getReactContext(ReactEditText.this).getAssets())));
++    }
++    if (!Float.isNaN(mTextAttributes.getEffectiveLineHeight())) {
++      ops.add(
++          new TextLayoutManager.SetSpanOperation(
++              start, end, new CustomLineHeightSpan(mTextAttributes.getEffectiveLineHeight())));
++    }
++
++    int priority = 0;
++    for (TextLayoutManager.SetSpanOperation op : ops) {
++      // Actual order of calling {@code execute} does NOT matter,
++      // but the {@code priority} DOES matter.
++      op.execute(spannable, priority);
++      priority++;
++    }
++
++    mDisableTextDiffing = originalDisableTextDiffing;
++  }
++
+   protected boolean showSoftKeyboard() {
+     return mInputMethodManager.showSoftInput(this, 0);
+   }
+@@ -911,11 +820,6 @@ public class ReactEditText extends AppCompatEditText
+     }
+   }
+ 
+-  /* package */ int getGravityHorizontal() {
+-    return getGravity()
+-        & (Gravity.HORIZONTAL_GRAVITY_MASK | Gravity.RELATIVE_HORIZONTAL_GRAVITY_MASK);
+-  }
+-
+   /* package */ void setGravityHorizontal(int gravityHorizontal) {
+     if (gravityHorizontal == 0) {
+       gravityHorizontal = mDefaultGravityHorizontal;
+@@ -1126,9 +1030,7 @@ public class ReactEditText extends AppCompatEditText
+ 
+     float effectiveLetterSpacing = mTextAttributes.getEffectiveLetterSpacing();
+     if (!Float.isNaN(effectiveLetterSpacing)) {
+-      if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+-        setLetterSpacing(effectiveLetterSpacing);
+-      }
++      setLetterSpacing(effectiveLetterSpacing);
+     }
+   }
+ 
+@@ -1143,7 +1045,7 @@ public class ReactEditText extends AppCompatEditText
+    * TextLayoutManager.java with some very minor modifications. There's some duplication between
+    * here and TextLayoutManager, so there might be an opportunity for refactor.
+    */
+-  private void updateCachedSpannable() {
++  private void updateCachedSpannable(boolean resetStyles) {
+     // Noops in non-Fabric
+     if (mFabricViewStateManager == null || !mFabricViewStateManager.hasStateWrapper()) {
+       return;
+@@ -1153,6 +1055,12 @@ public class ReactEditText extends AppCompatEditText
+       return;
+     }
+ 
++    if (resetStyles) {
++      mIsSettingTextFromCacheUpdate = true;
++      addSpansForMeasurement(getText());
++      mIsSettingTextFromCacheUpdate = false;
++    }
++
+     Editable currentText = getText();
+     boolean haveText = currentText != null && currentText.length() > 0;
+ 
+@@ -1210,9 +1118,11 @@ public class ReactEditText extends AppCompatEditText
+         // Measure something so we have correct height, even if there's no string.
+         sb.append("I");
+       }
++
++      // Make sure that all text styles are applied when we're measurable the hint or "blank" text
++      addSpansForMeasurement(sb);
+     }
+ 
+-    addSpansFromStyleAttributes(sb);
+     TextLayoutManager.setCachedSpannabledForTag(getId(), sb);
+   }
+ 
+@@ -1227,7 +1137,7 @@ public class ReactEditText extends AppCompatEditText
+   private class TextWatcherDelegator implements TextWatcher {
+     @Override
+     public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+-      if (!mIsSettingTextFromJS && mListeners != null) {
++      if (!mIsSettingTextFromCacheUpdate && !mIsSettingTextFromJS && mListeners != null) {
+         for (TextWatcher listener : mListeners) {
+           listener.beforeTextChanged(s, start, count, after);
+         }
+@@ -1241,20 +1151,23 @@ public class ReactEditText extends AppCompatEditText
+             TAG, "onTextChanged[" + getId() + "]: " + s + " " + start + " " + before + " " + count);
+       }
+ 
+-      if (!mIsSettingTextFromJS && mListeners != null) {
+-        for (TextWatcher listener : mListeners) {
+-          listener.onTextChanged(s, start, before, count);
++      if (!mIsSettingTextFromCacheUpdate) {
++        if (!mIsSettingTextFromJS && mListeners != null) {
++          for (TextWatcher listener : mListeners) {
++            listener.onTextChanged(s, start, before, count);
++          }
+         }
+-      }
+ 
+-      updateCachedSpannable();
++        updateCachedSpannable(
++            !mIsSettingTextFromJS && !mIsSettingTextFromState && start == 0 && before == 0);
++      }
+ 
+       onContentSizeChange();
+     }
+ 
+     @Override
+     public void afterTextChanged(Editable s) {
+-      if (!mIsSettingTextFromJS && mListeners != null) {
++      if (!mIsSettingTextFromCacheUpdate && !mIsSettingTextFromJS && mListeners != null) {
+         for (TextWatcher listener : mListeners) {
+           listener.afterTextChanged(s);
+         }
+diff --git a/node_modules/react-native/ReactAndroid/src/main/java/com/facebook/react/views/textinput/ReactTextInputManager.java b/node_modules/react-native/ReactAndroid/src/main/java/com/facebook/react/views/textinput/ReactTextInputManager.java
+index 5fda12a..85fb317 100644
+--- a/node_modules/react-native/ReactAndroid/src/main/java/com/facebook/react/views/textinput/ReactTextInputManager.java
++++ b/node_modules/react-native/ReactAndroid/src/main/java/com/facebook/react/views/textinput/ReactTextInputManager.java
+@@ -13,7 +13,6 @@ import android.content.Context;
+ import android.content.res.ColorStateList;
+ import android.graphics.BlendMode;
+ import android.graphics.BlendModeColorFilter;
+-import android.graphics.Paint;
+ import android.graphics.PorterDuff;
+ import android.graphics.drawable.Drawable;
+ import android.os.Build;
+@@ -68,7 +67,6 @@ import com.facebook.react.views.text.DefaultStyleValuesUtil;
+ import com.facebook.react.views.text.ReactBaseTextShadowNode;
+ import com.facebook.react.views.text.ReactTextUpdate;
+ import com.facebook.react.views.text.ReactTextViewManagerCallback;
+-import com.facebook.react.views.text.ReactTypefaceUtils;
+ import com.facebook.react.views.text.TextAttributeProps;
+ import com.facebook.react.views.text.TextInlineImageSpan;
+ import com.facebook.react.views.text.TextLayoutManager;
+@@ -406,11 +404,6 @@ public class ReactTextInputManager extends BaseViewManager<ReactEditText, Layout
+     view.setFontStyle(fontStyle);
+   }
+ 
+-  @ReactProp(name = ViewProps.FONT_VARIANT)
+-  public void setFontVariant(ReactEditText view, @Nullable ReadableArray fontVariant) {
+-    view.setFontFeatureSettings(ReactTypefaceUtils.parseFontVariant(fontVariant));
+-  }
+-
+   @ReactProp(name = ViewProps.INCLUDE_FONT_PADDING, defaultBoolean = true)
+   public void setIncludeFontPadding(ReactEditText view, boolean includepad) {
+     view.setIncludeFontPadding(includepad);
+@@ -932,20 +925,6 @@ public class ReactTextInputManager extends BaseViewManager<ReactEditText, Layout
+     view.setAutoFocus(autoFocus);
+   }
+ 
+-  @ReactProp(name = ViewProps.TEXT_DECORATION_LINE)
+-  public void setTextDecorationLine(ReactEditText view, @Nullable String textDecorationLineString) {
+-    view.setPaintFlags(
+-        view.getPaintFlags() & ~(Paint.STRIKE_THRU_TEXT_FLAG | Paint.UNDERLINE_TEXT_FLAG));
+-
+-    for (String token : textDecorationLineString.split(" ")) {
+-      if (token.equals("underline")) {
+-        view.setPaintFlags(view.getPaintFlags() | Paint.UNDERLINE_TEXT_FLAG);
+-      } else if (token.equals("line-through")) {
+-        view.setPaintFlags(view.getPaintFlags() | Paint.STRIKE_THRU_TEXT_FLAG);
+-      }
+-    }
+-  }
+-
+   @ReactPropGroup(
+       names = {
+         ViewProps.BORDER_WIDTH,
+@@ -1326,7 +1305,10 @@ public class ReactTextInputManager extends BaseViewManager<ReactEditText, Layout
+     }
+ 
+     ReadableNativeMap state = stateWrapper.getStateData();
+-    if (state == null || !state.hasKey("attributedString")) {
++    if (state == null) {
++      return null;
++    }
++    if (!state.hasKey("attributedString")) {
+       return null;
+     }
+ 
+@@ -1340,19 +1322,19 @@ public class ReactTextInputManager extends BaseViewManager<ReactEditText, Layout
+         TextLayoutManager.getOrCreateSpannableForText(
+             view.getContext(), attributedString, mReactTextViewManagerCallback);
+ 
++    boolean containsMultipleFragments =
++        attributedString.getArray("fragments").toArrayList().size() > 1;
++
+     int textBreakStrategy =
+-        TextAttributeProps.getTextBreakStrategy(
+-            paragraphAttributes.getString(ViewProps.TEXT_BREAK_STRATEGY));
+-    int currentJustificationMode =
+-        Build.VERSION.SDK_INT < Build.VERSION_CODES.O ? 0 : view.getJustificationMode();
++        TextAttributeProps.getTextBreakStrategy(paragraphAttributes.getString("textBreakStrategy"));
+ 
+     return ReactTextUpdate.buildReactTextUpdateFromState(
+         spanned,
+         state.getInt("mostRecentEventCount"),
+-        TextAttributeProps.getTextAlignment(
+-            props, TextLayoutManager.isRTL(attributedString), view.getGravityHorizontal()),
++        TextAttributeProps.getTextAlignment(props, TextLayoutManager.isRTL(attributedString)),
+         textBreakStrategy,
+-        TextAttributeProps.getJustificationMode(props, currentJustificationMode));
++        TextAttributeProps.getJustificationMode(props),
++        containsMultipleFragments);
+   }
+ 
+   public Object getReactTextUpdate(ReactEditText view, ReactStylesDiffMap props, MapBuffer state) {
+@@ -1373,18 +1355,20 @@ public class ReactTextInputManager extends BaseViewManager<ReactEditText, Layout
+         TextLayoutManagerMapBuffer.getOrCreateSpannableForText(
+             view.getContext(), attributedString, mReactTextViewManagerCallback);
+ 
++    boolean containsMultipleFragments =
++        attributedString.getMapBuffer(TextLayoutManagerMapBuffer.AS_KEY_FRAGMENTS).getCount() > 1;
++
+     int textBreakStrategy =
+         TextAttributeProps.getTextBreakStrategy(
+             paragraphAttributes.getString(TextLayoutManagerMapBuffer.PA_KEY_TEXT_BREAK_STRATEGY));
+-    int currentJustificationMode =
+-        Build.VERSION.SDK_INT < Build.VERSION_CODES.O ? 0 : view.getJustificationMode();
+ 
+     return ReactTextUpdate.buildReactTextUpdateFromState(
+         spanned,
+         state.getInt(TX_STATE_KEY_MOST_RECENT_EVENT_COUNT),
+         TextAttributeProps.getTextAlignment(
+-            props, TextLayoutManagerMapBuffer.isRTL(attributedString), view.getGravityHorizontal()),
++            props, TextLayoutManagerMapBuffer.isRTL(attributedString)),
+         textBreakStrategy,
+-        TextAttributeProps.getJustificationMode(props, currentJustificationMode));
++        TextAttributeProps.getJustificationMode(props),
++        containsMultipleFragments);
+   }
+ }
+diff --git a/node_modules/react-native/ReactAndroid/src/main/java/com/facebook/react/views/view/ReactViewBackgroundManager.java b/node_modules/react-native/ReactAndroid/src/main/java/com/facebook/react/views/view/ReactViewBackgroundManager.java
+index 9b479fa..4a5fce5 100644
+--- a/node_modules/react-native/ReactAndroid/src/main/java/com/facebook/react/views/view/ReactViewBackgroundManager.java
++++ b/node_modules/react-native/ReactAndroid/src/main/java/com/facebook/react/views/view/ReactViewBackgroundManager.java
+@@ -19,7 +19,6 @@ public class ReactViewBackgroundManager {
+ 
+   private @Nullable ReactViewBackgroundDrawable mReactBackgroundDrawable;
+   private View mView;
+-  private int mColor = Color.TRANSPARENT;
+ 
+   public ReactViewBackgroundManager(View view) {
+     this.mView = view;
+@@ -57,10 +56,6 @@ public class ReactViewBackgroundManager {
+     }
+   }
+ 
+-  public int getBackgroundColor() {
+-    return mColor;
+-  }
+-
+   public void setBorderWidth(int position, float width) {
+     getOrCreateReactViewBackground().setBorderWidth(position, width);
+   }
+diff --git a/node_modules/react-native/ReactCommon/cxxreact/ReactNativeVersion.h b/node_modules/react-native/ReactCommon/cxxreact/ReactNativeVersion.h
+index 47d2254..186acf6 100644
+--- a/node_modules/react-native/ReactCommon/cxxreact/ReactNativeVersion.h
++++ b/node_modules/react-native/ReactCommon/cxxreact/ReactNativeVersion.h
+@@ -17,7 +17,7 @@ namespace facebook::react {
+ constexpr struct {
+   int32_t Major = 0;
+   int32_t Minor = 71;
+-  int32_t Patch = 7;
++  int32_t Patch = 6;
+   std::string_view Prerelease = "";
+ } ReactNativeVersion;
+ 
+diff --git a/node_modules/react-native/index.js b/node_modules/react-native/index.js
+index f556fa3..2986043 100644
+--- a/node_modules/react-native/index.js
++++ b/node_modules/react-native/index.js
+@@ -411,43 +411,15 @@ module.exports = {
+   },
+   // Deprecated Prop Types
+   get ColorPropType(): $FlowFixMe {
+-    console.error(
+-      'ColorPropType will be removed from React Native, along with all ' +
+-        'other PropTypes. We recommend that you migrate away from PropTypes ' +
+-        'and switch to a type system like TypeScript. If you need to ' +
+-        'continue using ColorPropType, migrate to the ' +
+-        "'deprecated-react-native-prop-types' package.",
+-    );
+     return require('deprecated-react-native-prop-types').ColorPropType;
+   },
+   get EdgeInsetsPropType(): $FlowFixMe {
+-    console.error(
+-      'EdgeInsetsPropType will be removed from React Native, along with all ' +
+-        'other PropTypes. We recommend that you migrate away from PropTypes ' +
+-        'and switch to a type system like TypeScript. If you need to ' +
+-        'continue using EdgeInsetsPropType, migrate to the ' +
+-        "'deprecated-react-native-prop-types' package.",
+-    );
+     return require('deprecated-react-native-prop-types').EdgeInsetsPropType;
+   },
+   get PointPropType(): $FlowFixMe {
+-    console.error(
+-      'PointPropType will be removed from React Native, along with all ' +
+-        'other PropTypes. We recommend that you migrate away from PropTypes ' +
+-        'and switch to a type system like TypeScript. If you need to ' +
+-        'continue using PointPropType, migrate to the ' +
+-        "'deprecated-react-native-prop-types' package.",
+-    );
+     return require('deprecated-react-native-prop-types').PointPropType;
+   },
+   get ViewPropTypes(): $FlowFixMe {
+-    console.error(
+-      'ViewPropTypes will be removed from React Native, along with all ' +
+-        'other PropTypes. We recommend that you migrate away from PropTypes ' +
+-        'and switch to a type system like TypeScript. If you need to ' +
+-        'continue using ViewPropTypes, migrate to the ' +
+-        "'deprecated-react-native-prop-types' package.",
+-    );
+     return require('deprecated-react-native-prop-types').ViewPropTypes;
+   },
+ };
+diff --git a/node_modules/react-native/sdks/hermesc/osx-bin/hermesc b/node_modules/react-native/sdks/hermesc/osx-bin/hermesc
+index c5887f4..e1f3813 100644
+Binary files a/node_modules/react-native/sdks/hermesc/osx-bin/hermesc and b/node_modules/react-native/sdks/hermesc/osx-bin/hermesc differ
+diff --git a/node_modules/react-native/sdks/hermesc/win64-bin/hermesc.exe b/node_modules/react-native/sdks/hermesc/win64-bin/hermesc.exe
+index 340d363..8893d78 100644
+Binary files a/node_modules/react-native/sdks/hermesc/win64-bin/hermesc.exe and b/node_modules/react-native/sdks/hermesc/win64-bin/hermesc.exe differ
+diff --git a/node_modules/react-native/template/package.json b/node_modules/react-native/template/package.json
+index 83fd9b6..c37499e 100644
+--- a/node_modules/react-native/template/package.json
++++ b/node_modules/react-native/template/package.json
+@@ -11,7 +11,7 @@
+   },
+   "dependencies": {
+     "react": "18.2.0",
+-    "react-native": "0.71.7"
++    "react-native": "0.71.6"
+   },
+   "devDependencies": {
+     "@babel/core": "^7.20.0",

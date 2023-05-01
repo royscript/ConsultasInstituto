@@ -30,6 +30,11 @@
     "web": {
       "favicon": "./assets/favicon.png"
     },
-    "description": "v1 aplicacion consultas alumnos instituto"
+    "description": "v1 aplicacion consultas alumnos instituto",
+    "extra": {
+      "eas": {
+        "projectId": "a4b2bb8d-08b0-4571-b36d-9a2fae327f80"
+      }
+    }
   }
 }

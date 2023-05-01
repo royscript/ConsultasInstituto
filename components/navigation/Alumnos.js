@@ -147,6 +147,9 @@ function Alumnos({ navigation, route }) {
 
     useEffect(() => {
             const obtenerFotoAlumno = (rut) =>{
+              if(typeof fotos === 'undefined'){
+                return null;
+              }
               var foto = fotos.find(foto=>foto.rut==rut);
               if(foto){
                 foto = foto.foto;
@@ -154,6 +157,9 @@ function Alumnos({ navigation, route }) {
               return foto;
             }
             const esAlumnoEspecial = (rut)=>{
+              if(typeof alumnosEspeciales ==='undefined'){
+                return null;
+              }
               var es = alumnosEspeciales.find(alumno=> alumno.rut==rut);
               if(es){
                 return es.acuerdo;
